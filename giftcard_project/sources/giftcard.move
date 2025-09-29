@@ -18,6 +18,7 @@ module giftcard_project::giftcard{
         id: UID,
         owner: address,
         name: String,
+        img_number: u8,
         balance: Balance,
         cards: vector::<GiftCard>,
     }
@@ -42,6 +43,7 @@ module giftcard_project::giftcard{
     public fun create_user_account(
         ctx: &mut TxContext,
         name: String,
+        img_number
     ): User{
         //check if user exists
         //return an error if user already exists
@@ -49,6 +51,7 @@ module giftcard_project::giftcard{
             id: ctx(new),
             owner: ctx.sender,
             name,
+            img_number,
             balance: Balance{
                 id: ctx(new),
                 amount: 0,

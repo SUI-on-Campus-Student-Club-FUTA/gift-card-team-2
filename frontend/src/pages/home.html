@@ -5,7 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
 </head>
-<body>
-    
+<body class="relative bg-blue-300">
+    <div class="max-w-7xl mx-auto flex-auto p-5">
+        <div class="flex items-center justify-start gap-2 mb-10">
+            <!--
+                The image will be chosen based on the 5th 
+                number in the users wallet address. 
+                e.g 
+            -->
+            <img src={user.imgs[img_number] || imgs[user.img_number / 2]} alt="logo">
+            <div>
+                <p>{user.name}</p>
+                <p>{user.address}</p>
+            </div>
+        </div>
+        <div id="giftCardsDiv">
+            <!--use this div to house the gift cards or show o gift cards available -->
+            <!--handle the redeem logic here too in each div-->
+        </div>
+        <button>
+            <a href="/frontend/src/pages/new_card.html">New Card</p>
+        </button>
+    </div>
+    <div class="absolute w-1/3 h-1/3 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-smooth duration-5" style="display: none;">
+        <!--this popup when the user clicks on transfer ownership for any of the divs-->
+        <form>
+            <label for="name">
+                <p>Recievers Address</p>
+            </label>
+            <input 
+                type="text"
+                placeholder="Recievers Address"
+                value="address"
+                onchange="setAddress(address)">
+            <input type="submit" value="Send GiftCard">
+        </form>
+    </div>
 </body>
+<script src="/frontend/src/main.ts"></script>
 </html>
