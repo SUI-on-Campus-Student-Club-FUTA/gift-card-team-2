@@ -1,5 +1,0 @@
-{
-    "rewrites":[{
-        "destination": "/src/index.html"
-    }]
-}
