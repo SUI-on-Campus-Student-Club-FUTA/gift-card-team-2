@@ -1,156 +1,89 @@
-module giftcard_project::giftcard{
+module giftcard_project::giftcard {
 
-    use sui::error;
-    use std::vector;
-    use sui::object::{transfer};
-    use sui::coin::{Self, Coin};
-    use sui::sui:SUI;
-    use std::String;
+    use std::string::String;
+    use sui::transfer::{public_transfer};
 
-    const EGiftCardDoesntExist = 100;
-    const EGifCardIsNotForYou = 101;
-    const EMaxCardsReached = 102;
-    const EYouDontHaveAnyCards = 103;
-   
-    let MAX_CARD_AMOUNT: u64 = 10000;
+    const E_NOT_OWNER: u64 = 100;
+    const E_ALREADY_REDEEMED: u64 = 101;
+    const E_AMOUNT_TOO_HIGH: u64 = 102;
 
-    public struct User has key{
+    const MAX_CARD_AMOUNT: u64 = 10000;
+
+    public struct GiftCard has key, store {
         id: UID,
-        owner: address,
-        name: String,
-        img_number: u8,
-        balance: Balance,
-        cards: vector::<GiftCard>,
-    }
-
-    public struct GiftCard has key{
-        id: UID,
-        name: String,
-        price: u64,
+        amount: u64,
         owner: address,
         redeemed: bool,
     }
 
-    public struct Balance has key{
+    public struct User has key, store {
         id: UID,
-        amount: u64,
+        owner: address,
+        name: String,
+        img_number: u64,
+        cards: vector<ID>,
     }
 
-    let users: vector<User> = vector::empty<User>;
-    let num_users: u64 = vector::length(&users);
-    let gift_cards: vector<GiftCard> = vector::empty<GiftCard>;
-
-    public fun create_user_account(
-        ctx: &mut TxContext,
+    public fun create_user(
         name: String,
-        img_number
-    ): User{
-        //check if user exists
-        //return an error if user already exists
-        let new_user = User{
-            id: ctx(new),
-            owner: ctx.sender,
+        img_number: u64,
+        ctx: &mut TxContext
+    ): User {
+        User {
+            id: object::new(ctx),
+            owner: tx_context::sender(ctx),
             name,
             img_number,
-            balance: Balance{
-                id: ctx(new),
-                amount: 0,
-            },
-            cards: vector::empty<Giftcard>
+            cards: vector::empty<ID>()
         }
-        vector::push_back(users, new_user);
     }
 
-    public fun get_user_giftcards(
-        ctx: &mut TxContext,
-        user: address
-    ){
-        let user: vector<GiftCard> = users[address].cards;
-        if(vector::length(user_gift_cards) == 0){
-            abort EYouDontHaveAnyCards;
-        }
-        return user_gift_cards;
-    }
+    public fun create_gift_card_for_user(
+        user: &mut User,
+        amount: u64,
+        ctx: &mut TxContext
+    ) {
+        assert!(amount <= MAX_CARD_AMOUNT, E_AMOUNT_TOO_HIGH);
+        assert!(tx_context::sender(ctx) == user.owner, E_NOT_OWNER);
 
-    public fun create_gift_card(
-        ctx: &mut TxContext,
-        name: String,
-        _price: u64,
-        _owner: User
-    ): GiftCard{
-        let user: User = vector::borrow(users, owner);
-        let num_giftcards: u64 = vector::length(user.cards);
-        if(num_giftcards >= MAX_CARD_AMOUNT){
-            abort EMaxCardsReached;
-        }
-        let new_giftcard = GiftCard{
-            id: new(ctx),
-            name,
-            price: _price,
+        let card = GiftCard {
+            id: object::new(ctx),
+            amount,
             owner: user.owner,
-            bool: false,
+            redeemed: false
         };
-        vector::push_back(gift_cards, new_giftcard);
+
+        let card_id = object::id(&card);
+        vector::push_back(&mut user.cards, card_id);
+
+        public_transfer(card, user.owner)
     }
 
+    #[allow(lint(custom_state_change))] 
     public fun transfer_card(
-        ctx: &mut TxContext,
-        card: &mut GiftCard,
-        new_owner: address
-    ){
-        //also confirm if the new owner has an account
-        let gift_card: GiftCard = vector::borrow(&object, card);
-        if(!gift_card){
-            abort EGiftCardDoesntExist;
-        }
-        //acces control check
-        if(gift_card.owner !== ctx.sender){
-            abort EGifCardIsNotForYou;
-        }
-        let updated_card = GiftCard{
-            id: gift_card.id,
-            amount: gift_card.amount,
-            owner: new_owner,
-        }
-        transfer(updated_card, new_owner, ctx);
+        card: GiftCard,
+        new_owner: address,
+        ctx: &mut TxContext
+    ) {
+        assert!(tx_context::sender(ctx) == card.owner, E_NOT_OWNER);
+        transfer::public_transfer(card, new_owner);
     }
 
     public fun redeem_card(
-        ctx: &mut TxContext,
         card: GiftCard,
-        user: &mut User,
-    ){
-        let gift_card: GiftCard = vector::borrow(&object, card);
-        if(!gift_card){
-            abort EGiftCardDoesntExist;
-        }
-        if(gift_card.owner !== ctx.sender){
-            abort EGifCardIsNotForYou;
-        }
-        let updated_card = {
-            id: ctx(new),
-            price: card.price,
-            owner: card.owner,
-            redeemed: true,
-        }
-        let card_price: u64 = gift_card.price;
-        let new_balance: Balance = Balance{
-            id: ctx(new),
-            amount: card_price
-        }
-        //update the user
-        let updated_user = {
-            id: ctx(new),
-            owner: user.owner,
-            name: user.name,
-            balance: user.balance + new_balance,
-            cards: user.cards,
-        }
-        //trash the gift card 
-        for(&mut u64 i = 0; i < num_giftcards; i++){
-            if(vector::borrow(gift_cards, gift_cards[i]) === gift_card){
-                vector::remove(gift_cards, gift_cards[i]);
-            }
-        }
+        ctx: &mut TxContext
+    ): u64 {
+        assert!(tx_context::sender(ctx) == card.owner, E_NOT_OWNER);
+        assert!(!card.redeemed, E_ALREADY_REDEEMED);
+
+        let amount = card.amount;
+        let GiftCard { id, .. } = card;
+        object::delete(id);
+        amount
     }
+
+    public fun get_user_giftcards(user: &User): &vector<ID> {
+        &user.cards
+    }
+
 }
