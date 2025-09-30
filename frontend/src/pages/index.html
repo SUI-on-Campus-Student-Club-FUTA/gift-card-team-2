@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GiftCard Website On Move</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-blue-300"> 
+    <div class="relative max-w-7xl mx-auto p-5 h-screen">
+        <nav class="flex items-center justify-end">
+            <button 
+                class="p-2 bg-blue-500 text-white font-bold rounded-xl cursor-pointer hover:bg-blue-600"
+                id="connectButton" 
+                onclick="window.handleConnectWallet()"> 
+                <p>Connect Wallet</p>
+            </button>
+        </nav>
+
+        <div 
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 mt-5
+                -translate-y-1/2 text-center flex flex-col gap-3 shadow-md rounded-2xl p-8 bg-white/70">
+            <h3 class="font-bold text-2xl font-poppins">Welcome to SUI giftcards</h3>
+            <p class="font-semibold text-xs font-poppins">Send and create giftcards with ease</p>
+
+            <form 
+                onsubmit="window.handleCreateAccount(event)" class="flex flex-col gap-2">
+                <label for="name">
+                    <p class="text-left font-poppins">Name</p>
+                </label>
+                <input 
+                    class="p-2 rounded-xl focus:outline-none bg-gray-400"
+                    type="text"
+                    id="nameInput"
+                    placeholder="Please Enter Your Preffered UserName"
+                    required>
+                <input 
+                    type="submit" 
+                    value="Create Account"
+                    id="createAccountSubmit"
+                    class="p-2 mt-2 bg-blue-500 text-white font-bold rounded-xl cursor-pointer disabled:bg-gray-400"
+                    disabled> </form>
+        </div>
+    </div>
+</body>
+<script type="module" src="../scripts/main.ts"></script> 
+<script type="module" src="/scripts/main.ts"></script> 
+</html>
